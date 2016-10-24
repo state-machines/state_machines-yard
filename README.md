@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/state-machines/state_machines-yard.svg?branch=master)](https://travis-ci.org/state-machines/state_machines-yard)
+
 # State Machines YARD plugin
 
 State machines YARD plugin for automated documentation

@@ -1,4 +1,4 @@
-module StateMachine
+module StateMachines
   module YARD
     module Handlers
       # Handles and processes #state

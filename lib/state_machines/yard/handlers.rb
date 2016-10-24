@@ -1,4 +1,4 @@
-module StateMachine
+module StateMachines
   module YARD
     # YARD custom handlers for integrating the state_machine DSL with the
     # YARD documentation system

@@ -117,7 +117,7 @@ module StateMachines
         # Gets the type of ORM integration being used based on the list of
         # ancestors (including mixins)
         def integration
-          @integration ||= Integrations.match_ancestors(namespace.inheritance_tree(true).map { |ancestor| ancestor.path })
+          @integration ||= StateMachines::Integrations.match_ancestors(namespace.inheritance_tree(true).map { |ancestor| ancestor.path })
         end
 
         # Gets the class type being used to define states.  Default is "Symbol".

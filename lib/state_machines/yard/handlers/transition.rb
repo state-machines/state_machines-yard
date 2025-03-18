@@ -1,9 +1,12 @@
 module StateMachines
-  module YARD
+  module Yard
     module Handlers
       # Handles and processes #transition
       class Transition < Base
         handles method_call(:transition)
+        
+        # Store the handled method name for testing
+        @handles_method = :transition
 
         def process
           if [StateMachines::Machine, StateMachines::Event, StateMachines::State].include?(owner.class)

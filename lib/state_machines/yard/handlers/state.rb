@@ -1,9 +1,12 @@
 module StateMachines
-  module YARD
+  module Yard
     module Handlers
       # Handles and processes #state
       class State < Base
         handles method_call(:state)
+        
+        # Store the handled method name for testing
+        @handles_method = :state
 
         def process
           if owner.is_a?(StateMachines::Machine)
@@ -13,8 +16,10 @@ module StateMachines
 
             names.each do |name|
               owner.state(name) do
-                # Parse the block
-                handler.parse_block(statement.last.last, owner: self)
+                # Parse the block only if it exists
+                if statement.block
+                  handler.parse_block(statement.block.last, owner: self)
+                end
               end
             end
           end

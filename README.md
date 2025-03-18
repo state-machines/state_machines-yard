@@ -16,6 +16,13 @@ Or install it yourself as:
 
     $ gem install state_machines-yard
 
+## Testing
+
+A comprehensive test suite is included for the gem. To run all tests:
+
+```
+rake test
+```
 
 ## Contributing
 

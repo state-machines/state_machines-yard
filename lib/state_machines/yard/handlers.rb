@@ -1,12 +1,8 @@
 module StateMachines
-  module YARD
+  module Yard
     # YARD custom handlers for integrating the state_machine DSL with the
     # YARD documentation system
     module Handlers
     end
   end
-end
-
-Dir["#{File.dirname(__FILE__)}/handlers/*.rb"].sort.each do |path|
-  require "state_machines/yard/handlers/#{File.basename(path)}"
 end

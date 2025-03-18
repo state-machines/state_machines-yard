@@ -1,8 +1,8 @@
 module StateMachines
-  module YARD
+  module Yard
     module Handlers
       # Handles and processes nodes
-      class Base < ::YARD::Handlers::Ruby::Base
+      class Base < YARD::Handlers::Ruby::Base
 
         private
 
@@ -21,7 +21,9 @@ module StateMachines
         # Extracts the values from the node as either strings or symbols.
         # If the node isn't an array, it'll be converted to an array.
         def extract_node_names(ast, convert_to_array = true)
-          if [nil, :array].include?(ast.type)
+          if ast.is_a?(Array)
+            ast.map { |child| extract_node_name(child) }
+          elsif ast.nil? || ast.type == :array
             ast.children.map { |child| extract_node_name(child) }
           else
             node_name = extract_node_name(ast)

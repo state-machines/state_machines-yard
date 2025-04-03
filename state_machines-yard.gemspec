@@ -12,11 +12,11 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version     = '>= 3.0'
 
-  spec.files = `git ls-files -z`.split("\x0")
+  spec.files         = Dir.glob('{lib}/**/*') + %w(LICENSE.txt README.md)
   spec.require_paths = ['lib']
 
   spec.add_dependency 'yard'
-  spec.add_dependency 'state_machines-graphviz'
+  spec.add_dependency 'state_machines'
   spec.add_dependency 'rdoc'
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'rake', '~> 13.0'

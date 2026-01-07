@@ -16,7 +16,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'yard'
-  spec.add_dependency 'state_machines-graphviz', '>= 0.1.0'
   spec.add_dependency 'rdoc'
   spec.add_development_dependency 'bundler', '~> 2.7'
   spec.add_development_dependency 'rake', '~> 13.0'

@@ -6,7 +6,7 @@ case ENV['STATE_MACHINES_RENDERER']
 when 'graphviz'
   require 'state_machines/graphviz'
 when 'mermaid'
-  require 'state_machines/mermaid'
+  require 'state_machines-mermaid'
 end
 require 'nokogiri'
 require 'fileutils'

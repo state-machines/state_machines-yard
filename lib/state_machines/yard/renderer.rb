@@ -47,7 +47,7 @@ module StateMachines
       end
 
       def render_mermaid(machine)
-        require 'state_machines/mermaid'
+        require 'state_machines-mermaid'
 
         io = StringIO.new
         StateMachines::Mermaid::Renderer.draw_machine(machine, io: io)

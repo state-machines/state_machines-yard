@@ -68,5 +68,19 @@ class TemplatesTest < Minitest::Test
     description = status_machine.next_element
     refute_nil description, "Machine description should exist"
     assert_equal "This is a state machine for vehicle status", description.text.strip
+
+    case ENV['STATE_MACHINES_RENDERER']
+    when 'graphviz'
+      image = doc.at_css('img[alt^="State machine diagram for"]')
+      refute_nil image, "Graphviz image should be rendered"
+    when 'mermaid'
+      mermaid_block = doc.at_css('pre.mermaid')
+      refute_nil mermaid_block, "Mermaid block should be rendered"
+    else
+      image = doc.at_css('img[alt^="State machine diagram for"]')
+      mermaid_block = doc.at_css('pre.mermaid')
+      assert_nil image, "No image should be rendered"
+      assert_nil mermaid_block, "No mermaid block should be rendered"
+    end
   end
 end

@@ -13,6 +13,8 @@ module StateMachines
         attr_reader :machine
 
         def process
+          require_relative '../renderer'
+
           # Cross-file storage for state machines
           globals.state_machines ||= Hash.new { |h, k| h[k] = {} }
           namespace['state_machines'] ||= {}
@@ -28,16 +30,10 @@ module StateMachines
           # Parse the block
           parse_block(statement.last.last, owner: machine)
 
-          # Draw the machine for reference in the template
-          file = Tempfile.new(['state_machine', '.png'])
-          begin
-            if machine.draw(name: File.basename(file.path, '.png'), path: File.dirname(file.path), orientation: 'landscape')
-              namespace['state_machines'][name][:image] = file.read
-            end
-          ensure
-            # Clean up tempfile
-            file.close
-            file.unlink
+          render = Renderer.render(machine)
+          if render
+            namespace['state_machines'][name].merge!(render)
+            namespace['state_machines'][name][:renderer] = Renderer.selection
           end
 
           # Define auto-generated methods

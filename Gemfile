@@ -1,4 +1,8 @@
 source 'https://rubygems.org'
 gemspec
 
-gem 'ruby-graphviz', github: 'seuros/ruby-graphviz'
+gem 'ruby-graphviz'
+
+group :test do
+  gem 'state_machines-mermaid'
+end

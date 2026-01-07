@@ -13,11 +13,18 @@ end
 def state_machines
   @state_machines ||= begin
     if state_machines = object['state_machines']
+      @has_mermaid = state_machines.any? { |_name, machine| machine[:mermaid] }
       state_machines.each do |_name, machine|
         serializer.serialize(state_machine_image_path(machine), machine[:image]) if machine[:image]
       end
+      state_machines
     end
   end
+end
+
+def has_mermaid?
+  state_machines
+  @has_mermaid
 end
 
 # Generates the image path for the given machine's visualization

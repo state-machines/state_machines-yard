@@ -2,7 +2,12 @@ require 'minitest/autorun'
 require 'yard'
 require 'state_machines'
 require 'state_machines/yard'
-require 'state_machines/graphviz'
+case ENV['STATE_MACHINES_RENDERER']
+when 'graphviz'
+  require 'state_machines/graphviz'
+when 'mermaid'
+  require 'state_machines/mermaid'
+end
 require 'nokogiri'
 require 'fileutils'
 

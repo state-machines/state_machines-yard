@@ -14,6 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         ruby-version: ['3.4', '4.0']
+        renderer: ['none', 'graphviz', 'mermaid']
 
     steps:
     - uses: actions/checkout@v4
@@ -23,7 +24,14 @@ jobs:
         ruby-version: ${{ matrix.ruby-version }}
         bundler: 2.7.2
         bundler-cache: true
+      env:
+        STATE_MACHINES_RENDERER: ${{ matrix.renderer }}
+    - name: Install graphviz
+      if: matrix.renderer == 'graphviz'
+      run: sudo apt-get update && sudo apt-get install -y graphviz
     - name: Install graphviz  
       run: sudo apt-get update && sudo apt-get install -y graphviz
     - name: Run tests
+      env:
+        STATE_MACHINES_RENDERER: ${{ matrix.renderer }}
       run: bundle exec rake

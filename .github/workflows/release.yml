@@ -9,8 +9,8 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: googleapis/release-please-action@v3
+      - uses: actions/checkout@v7
+      - uses: googleapis/release-please-action@v5
         with:
           release-type: ruby
           package-name: state_machines-yard

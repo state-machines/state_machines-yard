@@ -13,16 +13,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby-version: ['3.4', '4.0']
+        ruby-version: ['4.0']
         renderer: ['none', 'graphviz', 'mermaid']
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
-        bundler: 2.7.2
         bundler-cache: true
       env:
         STATE_MACHINES_RENDERER: ${{ matrix.renderer }}

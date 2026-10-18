@@ -1,6 +1,10 @@
 source 'https://rubygems.org'
 gemspec
 
+platforms :mri do
+  gem 'padded_cell', '~> 0.2'
+end
+
 gem 'ruby-graphviz'
 
 group :test do

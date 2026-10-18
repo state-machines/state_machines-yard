@@ -10,14 +10,13 @@ when 'mermaid'
 end
 require 'nokogiri'
 require 'fileutils'
+require 'tmpdir'
 
 # Helper module for tests
 module TestHelpers
   # Create a temporary directory for YARD outputs
   def setup_yard
-    @yard_dir = File.expand_path('../tmp/yard', __dir__)
-    FileUtils.rm_rf(@yard_dir) if Dir.exist?(@yard_dir)
-    FileUtils.mkdir_p(@yard_dir)
+    @yard_dir = Dir.mktmpdir('state_machines-yard')
     YARD::Registry.clear
     # Register our handlers
     YARD::Tags::Library.define_tag("State Machines", :state_machines)

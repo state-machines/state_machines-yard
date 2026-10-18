@@ -10,14 +10,14 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/state-machines/state_machines-yard'
   spec.license = 'MIT'
 
-  spec.required_ruby_version     = '>= 3.0'
+  spec.required_ruby_version     = '>= 4.0'
 
   spec.files = `git ls-files -z`.split("\x0")
   spec.require_paths = ['lib']
 
   spec.add_dependency 'yard'
   spec.add_dependency 'rdoc'
-  spec.add_development_dependency 'bundler', '~> 2.7'
+  spec.add_development_dependency 'bundler', '>= 4.0'
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'minitest', '= 5.27.0'
   spec.add_development_dependency 'nokogiri'

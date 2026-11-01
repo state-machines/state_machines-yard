@@ -24,7 +24,7 @@ module StateMachines
           @machine = klass.state_machine(name, options) {}
 
           # Track the state machine
-          globals.state_machines[namespace.name][name] = machine
+          globals.state_machines[namespace.path][name] = machine
           namespace['state_machines'][name] = {name: name, description: statement.docstring}
 
           # Parse the block
@@ -92,7 +92,7 @@ module StateMachines
             # Find the first ancestor that has the machine
             loaded_superclasses.find do |superclass|
               if superclass != namespace
-                machine = globals.state_machines[superclass.name][name]
+                machine = globals.state_machines[superclass.path][name]
                 break machine if machine
               end
             end

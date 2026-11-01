@@ -3,12 +3,64 @@ require 'test_helper'
 class MachineHandlerTest < Minitest::Test
   include TestHelpers
 
+  RENDERER_VARIABLE = 'STATE_MACHINES_RENDERER'
+  DIAGRAM_RENDERER = 'mermaid'
+  NIL_STATE_ID = 'nil_state'
+
+  NAMESPACED_MACHINES = <<~RUBY
+    module Air
+      class Craft
+        state_machine initial: :grounded do
+          event :launch do
+            transition grounded: :airborne
+          end
+        end
+      end
+    end
+
+    module Sea
+      class Craft
+        state_machine initial: :docked do
+          event :launch do
+            transition docked: :sailing
+          end
+        end
+      end
+    end
+
+    module Air
+      class Glider < Craft
+        state_machine do
+          state :towed
+        end
+      end
+    end
+  RUBY
+
   def setup
     setup_yard
   end
 
   def teardown
     cleanup_yard
+  end
+
+  def test_classes_sharing_a_short_name_do_not_share_an_inherited_machine
+    previous_renderer = ENV[RENDERER_VARIABLE]
+    ENV[RENDERER_VARIABLE] = DIAGRAM_RENDERER
+    begin
+      parse_code(NAMESPACED_MACHINES)
+    ensure
+      ENV[RENDERER_VARIABLE] = previous_renderer
+    end
+
+    diagram = YARD::Registry.at('Air::Glider')['state_machines'][:state][DIAGRAM_RENDERER.to_sym]
+    documented_states = (diagram.scan(/^\s+(\S+) : /).flatten - [NIL_STATE_ID]).sort
+
+    eval(NAMESPACED_MACHINES, TOPLEVEL_BINDING)
+    actual_states = Air::Glider.state_machines[:state].states.map(&:name).compact.map(&:to_s).sort
+
+    assert_equal actual_states, documented_states
   end
 
   def test_machine_handler_registers_state_machine

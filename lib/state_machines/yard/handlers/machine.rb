@@ -13,6 +13,9 @@ module StateMachines
         # Store the handled method name for testing
         @handles_method = :state_machine
 
+        # What a renderer adds to a machine's entry
+        DIAGRAM_KEYS = %i[image mermaid renderer].freeze
+
         # Stands for an initial state the documented code computes
         DYNAMIC_INITIAL_STATE = ->(_object) {}
 
@@ -84,11 +87,21 @@ module StateMachines
         end
 
         # The machine's diagram, drawn by the selected renderer
+        # A reopened machine is drawn again: its previous diagram shows only
+        # what was declared before, so it is never kept in place of a new one
         def document_diagram
+          entry = namespace['state_machines'][name]
+          stale = entry.slice(*DIAGRAM_KEYS)
+          DIAGRAM_KEYS.each { entry.delete(it) }
           render = Renderer.render(machine)
-          return unless render
+          return entry.merge!(render, renderer: Renderer.selection) if render
 
-          namespace['state_machines'][name].merge!(render, renderer: Renderer.selection)
+          warn_stale_diagram unless stale.except(:renderer).empty?
+        end
+
+        def warn_stale_diagram
+          log.warn "state_machines-yard: the reopened #{name} machine could not be drawn again; " \
+                   "its earlier diagram is left out (#{parser.file}:#{statement.line})"
         end
 
         # The machine's name: its first argument, :state when there is none

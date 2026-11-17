@@ -91,6 +91,43 @@ class ReviewTest < Minitest::Test
     assert_includes(@log.string, 'state machine is not documented')
   end
 
+  REOPENED_WITH_AN_UNDRAWABLE_STATE = <<~RUBY
+    class B
+      state_machine(:status, initial: :a) { event(:go) { transition a: :b } }
+      state_machine(:status) { event(:empty) { transition b: :"" } }
+    end
+  RUBY
+
+  def test_a_reopened_machine_that_cannot_be_drawn_again_publishes_no_earlier_diagram
+    %w[mermaid graphviz].each do |renderer|
+      entry = with_renderer(renderer) do
+        parse_code(REOPENED_WITH_AN_UNDRAWABLE_STATE)
+        YARD::Registry.at('B')['state_machines'][:status]
+      end
+
+      assert_equal(%w[go empty], entry[:events].map { it[:name] }, renderer)
+      next assert_empty(entry.slice(:mermaid, :image, :renderer), renderer) if renderer == 'mermaid'
+
+      # GraphViz draws a state named "" (blank label): its diagram is the extended machine's
+      assert_equal(:graphviz, entry[:renderer])
+    end
+    assert_includes(@log.string, 'the reopened status machine could not be drawn again')
+  end
+
+  def test_a_reopened_machine_is_drawn_again
+    entry = with_renderer('mermaid') do
+      parse_code(<<~RUBY)
+        class B
+          state_machine(:status, initial: :a) { event(:go) { transition a: :b } }
+          state_machine(:status) { event(:stop) { transition b: :a } }
+        end
+      RUBY
+      YARD::Registry.at('B')['state_machines'][:status]
+    end
+
+    assert_includes(entry[:mermaid], 'b --> a')
+  end
+
   def test_a_subclass_machine_takes_its_own_options
     machines = parse_machines(<<~RUBY)
       class V
@@ -135,6 +172,15 @@ class ReviewTest < Minitest::Test
     assert_includes(@log.string, 'state is not documented: 2.5 state defined as Float')
     assert_equal([1], machine.states.select(&:initial?).map(&:name))
     assert_equal(1, machine.events[:go].branches.size)
+  end
+
+  def with_renderer(renderer)
+    previous = ENV.fetch('STATE_MACHINES_RENDERER', nil)
+    ENV['STATE_MACHINES_RENDERER'] = renderer
+    YARD::Registry.clear
+    yield
+  ensure
+    ENV['STATE_MACHINES_RENDERER'] = previous
   end
 
   def test_generated_methods_document_their_parameters

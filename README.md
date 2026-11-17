@@ -34,6 +34,14 @@ only known when the code runs (a constant, a method call) cannot be documented
 faithfully, so that transition is left out with a warning; an initial state
 written as code documents no state as initial.
 
+Transition callbacks (`before_transition`, `after_transition`, `around_transition`,
+`after_failure`) are read the same way: their methods (positional, `do:`, a block),
+the transitions they run on (`from`/`to`/`on`, their `except_` forms, `a => b`
+pairs) and their own conditions. Diagrams show them as the renderers label them:
+a Symbol by name, String code as written, a block or lambda as `lambda@file:line`,
+a conditional callback with its conditions. A diagram a renderer fails to draw is
+left out with a warning; the rest of the class's documentation stands.
+
 ## Testing
 
 A comprehensive test suite is included for the gem. To run all tests:

@@ -17,11 +17,17 @@ module StateMachines
         :none
       end
 
+      # The diagram, or nil. A renderer that fails on a machine leaves its
+      # diagram out with a warning; the rest of its documentation stands.
       def render(machine)
         case selection
         when :graphviz then render_graphviz(machine)
         when :mermaid then render_mermaid(machine)
         end
+      rescue StandardError => e
+        log.warn "state_machines-yard: no #{selection} diagram for #{machine.owner_class} #{machine.name}: " \
+                 "#{e.class}: #{e.message}"
+        nil
       end
 
       # The machine as a PNG. Drawn with the GraphViz renderer itself:
@@ -43,7 +49,7 @@ module StateMachines
         require 'state_machines-mermaid'
 
         io = StringIO.new
-        StateMachines::Mermaid::Renderer.draw_machine(machine, io: io, show_conditions: true)
+        StateMachines::Mermaid::Renderer.draw_machine(machine, io: io, show_conditions: true, show_callbacks: true)
         mermaid = io.string
         return nil if mermaid.strip.empty?
 

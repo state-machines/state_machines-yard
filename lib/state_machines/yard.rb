@@ -11,6 +11,8 @@ end
 
 require_relative 'yard/handlers'
 require_relative 'yard/handlers/base'
+require_relative 'yard/handlers/requirements'
+require_relative 'yard/handlers/callback'
 require_relative 'yard/handlers/event'
 require_relative 'yard/handlers/machine'
 require_relative 'yard/handlers/state'

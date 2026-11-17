@@ -52,11 +52,14 @@ module StateMachines
         protected
 
         # The class the documented machine is built on: a subclass of the
-        # inherited machine's owner, so the machine extends that one
+        # inherited machine's owner, so the machine extends that one. It is
+        # named as the documented class, which diagrams show in their title.
         def owner_class
-          return Class.new(inherited_machine.owner_class) if inherited_machine
-
-          Class.new { extend StateMachines::MacroMethods }
+          klass = inherited_machine ? Class.new(inherited_machine.owner_class) : Class.new { extend MacroMethods }
+          path = namespace.path
+          klass.define_singleton_method(:name) { path }
+          klass.define_singleton_method(:to_s) { path }
+          klass
         end
 
         # The machine's diagram, drawn by the selected renderer

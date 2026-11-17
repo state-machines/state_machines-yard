@@ -161,6 +161,10 @@ class GuardsTest < Minitest::Test
     assert_includes(mermaid, 'drive [if engine_started? #38;#38; if_any_state (gate=open, alarm=off)]')
   end
 
+  def test_the_documented_machine_is_owned_by_the_documented_class
+    assert_equal('Fleet::Vehicle', machine('').owner_class.name)
+  end
+
   def test_the_graphviz_diagram_is_a_png_drawn_by_graphviz
     previous = StateMachines::Machine.renderer
     StateMachines::Machine.renderer = StateMachines::STDIORenderer

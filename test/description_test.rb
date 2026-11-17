@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'state_machines/yard/renderer'
 
 # The generated documentation lists each event's transitions, guards and
 # callbacks as text whichever renderer draws the diagram, or none
@@ -79,6 +80,44 @@ class DescriptionTest < Minitest::Test
 
     assert_equal(['off -> on / around hold, before check, around time, after log'],
                  StateMachines::Yard::Description.events(machine).first[:transitions])
+  end
+
+  LAMP = <<~RUBY
+    class Lamp
+      state_machine initial: :off do
+        before_transition do: :check
+        around_transition do: :hold
+        before_transition on: :switch, do: :warm, if: :cold?
+        after_transition do: :log
+        state :dim
+        event :switch do
+          transition off: :lit, if: :bulb?, before: :prime, around: :fade, after: [:glow, -> { hum }]
+          transition off: :dim, after: :flicker
+          transition lit: same, around: :pulse
+        end
+        state :lit do
+          transition to: :off, on: :cut, around: :fade, before: :cool
+        end
+      end
+    end
+  RUBY
+
+  def test_a_transitions_own_callbacks_read_where_the_core_runs_them
+    switch, cut = StateMachines::Yard::Description.events(parse_machines(LAMP)['Lamp'][:state])
+
+    assert_equal(['off -> lit [if bulb?] / before check, around hold, before warm (if cold?), before prime, ' \
+                  'around fade, after glow, after lambda@(stdin):9, after log',
+                  'off -> dim / before check, around hold, before warm (if cold?), after flicker, after log',
+                  'lit -> lit / before check, around hold, before warm (if cold?), around pulse, after log'],
+                 switch[:transitions])
+    # a state context transition, its around: written before its before:
+    assert_equal(['lit -> off / before check, around hold, around fade, before cool, after log'], cut[:transitions])
+  end
+
+  def test_the_mermaid_diagram_shows_a_transitions_own_callbacks
+    mermaid = StateMachines::Yard::Renderer.render_mermaid(parse_machines(LAMP)['Lamp'][:state])[:mermaid]
+
+    assert_includes(mermaid, 'lit --> off : cut / before check, around hold, around fade, before cool, after log')
   end
 
   def test_each_renderer_mode_documents_the_event_methods

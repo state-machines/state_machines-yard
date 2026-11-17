@@ -21,8 +21,9 @@ Or install it yourself as:
 Whatever the renderer, each class's documentation lists its machines' events, and
 each event's method (`ignite`, `ignite!`) describes the transitions it performs: from
 each state the first branch that matches, its guards and the callbacks that run on it in
-the order the core runs them (an around where it enters),
-and the `after_failure` callbacks:
+the order the core runs them (an around where it enters; a transition's own
+`before:`/`around:`/`after:` closest to the state change, after the machine's befores and
+before its afters), and the `after_failure` callbacks:
 
     * parked -> idling [if engine_ok? && if_any_state (gate=open, alarm=off)] / before check_mirrors, after log_start (if logging?)
     * parked -> stalled / before check_mirrors
@@ -53,7 +54,9 @@ written as code documents no state as initial.
 Transition callbacks (`before_transition`, `after_transition`, `around_transition`,
 `after_failure`) are read the same way: their methods (positional, `do:`, a block),
 the transitions they run on (`from`/`to`/`on`, their `except_` forms, `a => b`
-pairs) and their own conditions. Diagrams show them as the renderers label them:
+pairs) and their own conditions. A transition's own callbacks
+(`transition parked: :idling, before: :prime, after: -> { log }`) are read as methods the
+same way, in an event or a state's block. Diagrams show them as the renderers label them:
 a Symbol by name, String code as written, a block or lambda as `lambda@file:line`,
 a conditional callback with its conditions. A diagram a renderer fails to draw is
 left out with a warning; the rest of the class's documentation stands.

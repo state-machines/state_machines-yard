@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 require 'yard'
+require 'state_machines'
 require_relative 'yard/version'
 module StateMachines
   # YARD plugin for automated documentation

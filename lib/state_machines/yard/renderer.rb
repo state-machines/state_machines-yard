@@ -1,14 +1,17 @@
 # frozen_string_literal: true
 
 require 'stringio'
+require 'tmpdir'
 
 module StateMachines
   module Yard
+    # Draws a documented machine with the renderer STATE_MACHINES_RENDERER
+    # names (graphviz, mermaid or none), guards included
     module Renderer
       module_function
 
       def selection
-        env = ENV['STATE_MACHINES_RENDERER']
+        env = ENV.fetch('STATE_MACHINES_RENDERER', nil)
         return env.to_sym if %w[graphviz mermaid none].include?(env)
 
         :none
@@ -16,32 +19,22 @@ module StateMachines
 
       def render(machine)
         case selection
-        when :graphviz
-          render_graphviz(machine)
-        when :mermaid
-          render_mermaid(machine)
-        else
-          nil
+        when :graphviz then render_graphviz(machine)
+        when :mermaid then render_mermaid(machine)
         end
       end
 
+      # The machine as a PNG. Drawn with the GraphViz renderer itself:
+      # Machine#draw goes through whichever renderer is global.
       def render_graphviz(machine)
-        require 'tempfile'
         require 'state_machines/graphviz'
 
-        file = Tempfile.new(['state_machine', '.png'])
-        begin
-          if machine.draw(name: File.basename(file.path, '.png'),
-                         path: File.dirname(file.path),
-                         orientation: 'landscape')
-            return { image: file.read }
-          end
-        ensure
-          file.close
-          file.unlink
+        Dir.mktmpdir('state_machines-yard') do |dir|
+          graph = StateMachines::Graphviz::Renderer.draw_machine(
+            machine, name: 'state_machine', path: dir, format: 'png', orientation: 'landscape'
+          )
+          { image: File.binread(graph.file_path) }
         end
-
-        nil
       rescue LoadError
         nil
       end
@@ -50,9 +43,9 @@ module StateMachines
         require 'state_machines-mermaid'
 
         io = StringIO.new
-        StateMachines::Mermaid::Renderer.draw_machine(machine, io: io)
+        StateMachines::Mermaid::Renderer.draw_machine(machine, io: io, show_conditions: true)
         mermaid = io.string
-        return nil if mermaid.nil? || mermaid.strip.empty?
+        return nil if mermaid.strip.empty?
 
         { mermaid: mermaid }
       rescue LoadError

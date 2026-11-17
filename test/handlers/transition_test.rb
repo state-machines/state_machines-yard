@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class TransitionHandlerTest < Minitest::Test
@@ -25,11 +27,13 @@ class TransitionHandlerTest < Minitest::Test
 
     parse_code(code)
     vehicle_class = YARD::Registry.at('Vehicle')
-    refute_nil vehicle_class, "Vehicle class should be registered"
-    
+
+    refute_nil vehicle_class, 'Vehicle class should be registered'
+
     # Check for transitions documentation through the event methods
     ignite_method = YARD::Registry.at('Vehicle#ignite')
-    refute_nil ignite_method, "ignite method should be registered"
+
+    refute_nil ignite_method, 'ignite method should be registered'
   end
 
   def test_transition_handler_with_multiple_states
@@ -45,13 +49,15 @@ class TransitionHandlerTest < Minitest::Test
     RUBY
 
     parse_code(code)
-    
+
     vehicle_class = YARD::Registry.at('Vehicle')
-    refute_nil vehicle_class, "Vehicle class should be registered"
-    
+
+    refute_nil vehicle_class, 'Vehicle class should be registered'
+
     # The drive method should be registered
     drive_method = YARD::Registry.at('Vehicle#drive')
-    refute_nil drive_method, "drive method should be registered"
+
+    refute_nil drive_method, 'drive method should be registered'
   end
 
   def test_transition_handler_with_conditional
@@ -67,13 +73,38 @@ class TransitionHandlerTest < Minitest::Test
     RUBY
 
     parse_code(code)
-    
+
     vehicle_class = YARD::Registry.at('Vehicle')
-    refute_nil vehicle_class, "Vehicle class should be registered"
-    
+
+    refute_nil vehicle_class, 'Vehicle class should be registered'
+
     # The drive method should be registered despite the conditional
     drive_method = YARD::Registry.at('Vehicle#drive')
-    refute_nil drive_method, "drive method should be registered"
+
+    refute_nil drive_method, 'drive method should be registered'
+  end
+
+  def test_transition_handler_preserves_static_guards
+    code = <<-RUBY
+      class Vehicle
+        state_machine :gate, initial: :locked do
+          event :unlock do
+            transition locked: :unlocked
+          end
+        end
+
+        state_machine :status, initial: :parked do
+          event :drive do
+            transition parked: :moving, if: :engine_started?, if_state: { gate: :unlocked }
+          end
+        end
+      end
+    RUBY
+
+    branch = parse_machines(code)['Vehicle'][:status].events[:drive].branches.first
+
+    assert_equal :engine_started?, branch.if_condition
+    assert_equal({ if_state: { gate: :unlocked } }, branch.state_guards)
   end
 
   def test_transition_handler_with_special_matchers
@@ -84,7 +115,7 @@ class TransitionHandlerTest < Minitest::Test
             # Use 'all' matcher
             transition any => :parked
           end
-          
+      #{'    '}
           event :maintain do
             # Use 'same' matcher
             transition all => same
@@ -94,15 +125,18 @@ class TransitionHandlerTest < Minitest::Test
     RUBY
 
     parse_code(code)
-    
+
     vehicle_class = YARD::Registry.at('Vehicle')
-    refute_nil vehicle_class, "Vehicle class should be registered"
-    
+
+    refute_nil vehicle_class, 'Vehicle class should be registered'
+
     # Both methods should be registered
     repair_method = YARD::Registry.at('Vehicle#repair')
-    refute_nil repair_method, "repair method should be registered"
-    
+
+    refute_nil repair_method, 'repair method should be registered'
+
     maintain_method = YARD::Registry.at('Vehicle#maintain')
-    refute_nil maintain_method, "maintain method should be registered"
+
+    refute_nil maintain_method, 'maintain method should be registered'
   end
 end

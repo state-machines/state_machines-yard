@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'minitest/autorun'
 require 'yard'
 require 'state_machines'
 require 'state_machines/yard'
-case ENV['STATE_MACHINES_RENDERER']
+case ENV.fetch('STATE_MACHINES_RENDERER', nil)
 when 'graphviz'
   require 'state_machines/graphviz'
 when 'mermaid'
@@ -19,7 +21,7 @@ module TestHelpers
     @yard_dir = Dir.mktmpdir('state_machines-yard')
     YARD::Registry.clear
     # Register our handlers
-    YARD::Tags::Library.define_tag("State Machines", :state_machines)
+    YARD::Tags::Library.define_tag('State Machines', :state_machines)
   end
 
   # Parse the given code with YARD
@@ -28,14 +30,22 @@ module TestHelpers
     YARD::Registry.load
   end
 
+  # Parse the given code into fresh parser globals and return the machines
+  # the handlers built, keyed by the owner's namespace path, then name
+  def parse_machines(code)
+    globals = YARD::OpenStruct.new
+    YARD::Parser::SourceParser.new(:ruby, globals).parse(StringIO.new(code))
+    globals.state_machines
+  end
+
   # Clean up after test
   def cleanup_yard
-    FileUtils.rm_rf(@yard_dir) if Dir.exist?(@yard_dir)
+    FileUtils.rm_rf(@yard_dir)
     YARD::Registry.clear
   end
-  
+
   # Helper method to check if registry object has attribute
-  def has_attribute?(obj, name)
-    obj.respond_to?(:[]) && obj[name] != nil
+  def attribute?(obj, name)
+    obj.respond_to?(:[]) && !obj[name].nil?
   end
 end

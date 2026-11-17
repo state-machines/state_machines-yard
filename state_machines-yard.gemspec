@@ -24,4 +24,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'minitest', '~> 6.0'
   spec.add_development_dependency 'nokogiri'
   spec.add_development_dependency 'rake', '~> 13.0'
+  spec.add_development_dependency 'rubocop', '~> 1.59'
+  spec.add_development_dependency 'rubocop-minitest', '~> 0.34'
+  spec.add_development_dependency 'rubocop-performance', '~> 1.20'
+  spec.add_development_dependency 'rubocop-rake', '~> 0.6'
+  spec.metadata['rubygems_mfa_required'] = 'true'
 end

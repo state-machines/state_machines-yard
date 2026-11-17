@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class BaseHandlerTest < Minitest::Test
@@ -11,7 +13,7 @@ class BaseHandlerTest < Minitest::Test
     cleanup_yard
   end
 
-  def test_extract_node_name_with_symbol
+  def test_symbol_state_name
     code = <<-RUBY
       class TestClass
         state_machine :status do
@@ -22,17 +24,18 @@ class BaseHandlerTest < Minitest::Test
     RUBY
 
     parse_code(code)
-    
-    # We can't directly test the extract_node_name method since it's private
-    # But we can test that symbol nodes were correctly processed
+
+    # The name was read from the symbol literal
     test_class = YARD::Registry.at('TestClass')
-    refute_nil test_class, "TestClass should be registered"
-    
+
+    refute_nil test_class, 'TestClass should be registered'
+
     parked_method = YARD::Registry.at('TestClass#parked?')
-    refute_nil parked_method, "parked? method should be registered"
+
+    refute_nil parked_method, 'parked? method should be registered'
   end
 
-  def test_extract_node_name_with_string
+  def test_string_state_name
     code = <<-RUBY
       class TestClass
         state_machine :status do
@@ -43,16 +46,18 @@ class BaseHandlerTest < Minitest::Test
     RUBY
 
     parse_code(code)
-    
+
     # Test that string nodes were correctly processed
     test_class = YARD::Registry.at('TestClass')
-    refute_nil test_class, "TestClass should be registered"
-    
+
+    refute_nil test_class, 'TestClass should be registered'
+
     moving_method = YARD::Registry.at('TestClass#moving?')
-    refute_nil moving_method, "moving? method should be registered"
+
+    refute_nil moving_method, 'moving? method should be registered'
   end
 
-  def test_extract_node_names_with_array
+  def test_several_state_names
     code = <<-RUBY
       class TestClass
         state_machine :status do
@@ -63,13 +68,15 @@ class BaseHandlerTest < Minitest::Test
     RUBY
 
     parse_code(code)
-    
+
     # Test that array nodes were correctly processed
     test_class = YARD::Registry.at('TestClass')
-    refute_nil test_class, "TestClass should be registered"
-    
-    %w(parked idling moving).each do |state|
+
+    refute_nil test_class, 'TestClass should be registered'
+
+    %w[parked idling moving].each do |state|
       method = YARD::Registry.at("TestClass##{state}?")
+
       refute_nil method, "#{state}? method should be registered"
     end
   end

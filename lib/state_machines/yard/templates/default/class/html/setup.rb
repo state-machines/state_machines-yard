@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Define where state machine descriptions will be rendered
 def init
   super
@@ -11,18 +13,16 @@ end
 
 # Gets a list of state machines for this class
 def state_machines
-  @state_machines ||= begin
-    if state_machines = object['state_machines']
-      @has_mermaid = state_machines.any? { |_name, machine| machine[:mermaid] }
-      state_machines.each do |_name, machine|
-        serializer.serialize(state_machine_image_path(machine), machine[:image]) if machine[:image]
-      end
-      state_machines
-    end
-  end
+  @state_machines ||= if (state_machines = object['state_machines'])
+                        @has_mermaid = state_machines.any? { |_name, machine| machine[:mermaid] }
+                        state_machines.each_value do |machine|
+                          serializer.serialize(state_machine_image_path(machine), machine[:image]) if machine[:image]
+                        end
+                        state_machines
+                      end
 end
 
-def has_mermaid?
+def mermaid?
   state_machines
   @has_mermaid
 end

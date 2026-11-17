@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module StateMachines
   module Yard
     # YARD custom handlers for integrating the state_machine DSL with the

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 require 'nokogiri'
 
@@ -23,15 +25,15 @@ class TemplatesTest < Minitest::Test
           state :parked
           state :idling
           state :moving
-          
+      #{'    '}
           event :ignite do
             transition parked: :idling
           end
-          
+      #{'    '}
           event :drive do
             transition idling: :moving
           end
-          
+      #{'    '}
           event :park do
             transition moving: :parked
           end
@@ -40,47 +42,54 @@ class TemplatesTest < Minitest::Test
     RUBY
 
     parse_code(code)
-    
+
     # Generate documentation
     options = YARD::CLI::YardocOptions.new
     options.files = []
     options.output = @yard_dir
-    
+
     YARD::CLI::Yardoc.run('--no-save', '--no-progress', '--quiet', '-o', @yard_dir)
-    
+
     # Check if the HTML file was generated
     html_file = File.join(@yard_dir, 'Vehicle.html')
-    assert File.exist?(html_file), "HTML file for Vehicle should exist"
-    
+
+    assert_path_exists html_file, 'HTML file for Vehicle should exist'
+
     # Parse the HTML and check for state machine content
     html = File.read(html_file)
     doc = Nokogiri::HTML(html)
-    
+
     # Check for state machine section
     state_machines_section = doc.at_css('h2:contains("State Machines")')
-    refute_nil state_machines_section, "State Machines section should exist in the HTML"
-    
+
+    refute_nil state_machines_section, 'State Machines section should exist in the HTML'
+
     # Check for status machine
     status_machine = doc.at_css('h3:contains("status")')
-    refute_nil status_machine, "Status machine heading should exist in the HTML"
-    
+
+    refute_nil status_machine, 'Status machine heading should exist in the HTML'
+
     # Check for description
     description = status_machine.next_element
-    refute_nil description, "Machine description should exist"
-    assert_equal "This is a state machine for vehicle status", description.text.strip
 
-    case ENV['STATE_MACHINES_RENDERER']
+    refute_nil description, 'Machine description should exist'
+    assert_equal 'This is a state machine for vehicle status', description.text.strip
+
+    case ENV.fetch('STATE_MACHINES_RENDERER', nil)
     when 'graphviz'
       image = doc.at_css('img[alt^="State machine diagram for"]')
-      refute_nil image, "Graphviz image should be rendered"
+
+      refute_nil image, 'Graphviz image should be rendered'
     when 'mermaid'
       mermaid_block = doc.at_css('pre.mermaid')
-      refute_nil mermaid_block, "Mermaid block should be rendered"
+
+      refute_nil mermaid_block, 'Mermaid block should be rendered'
     else
       image = doc.at_css('img[alt^="State machine diagram for"]')
       mermaid_block = doc.at_css('pre.mermaid')
-      assert_nil image, "No image should be rendered"
-      assert_nil mermaid_block, "No mermaid block should be rendered"
+
+      assert_nil image, 'No image should be rendered'
+      assert_nil mermaid_block, 'No mermaid block should be rendered'
     end
   end
 end

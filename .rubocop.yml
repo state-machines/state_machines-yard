@@ -1,0 +1,38 @@
+plugins:
+  - rubocop-minitest
+  - rubocop-rake
+  - rubocop-performance
+AllCops:
+  TargetRubyVersion: 4.0
+  NewCops: enable
+  Exclude:
+    - 'pkg/**/*'
+    - 'tmp/**/*'
+    - 'vendor/**/*'
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/MethodLength:
+    Max: 20
+    Exclude:
+      - 'test/**/*' # Tests hold their fixture source
+
+Metrics/AbcSize:
+    Max: 40
+
+Minitest/MultipleAssertions:
+  Enabled: false
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
+Metrics/ClassLength:
+  Exclude:
+    - 'test/**/*' # Allow longer test classes
+    - 'lib/state_machines/yard/handlers/machine.rb' # The generated methods' documentation
+
+# Test classes are long blocks by nature.
+Metrics/BlockLength:
+  Exclude:
+    - 'test/**/*'

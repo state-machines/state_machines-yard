@@ -1,16 +1,18 @@
-name: Release Please
+name: release-please
 
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
       - uses: googleapis/release-please-action@v5
-        with:
-          release-type: ruby
-          package-name: state_machines-yard

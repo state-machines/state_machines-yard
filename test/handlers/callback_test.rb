@@ -33,7 +33,7 @@ class CallbackHandlerTest < Minitest::Test
     machine(body).callbacks.values.flatten.map do |callback|
       branch = callback.branch
       requirement = branch.state_requirements.first
-      { type: callback.type, methods: callback.instance_variable_get(:@methods),
+      { type: callback.type, methods: callback.callables,
         from: [requirement[:from].class, requirement[:from].values],
         to: [requirement[:to].class, requirement[:to].values],
         on: branch.event_requirement.values, if: branch.if_condition, unless: branch.unless_condition,

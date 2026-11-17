@@ -50,7 +50,7 @@ module StateMachines
         machine.callbacks[:failure].select { it.branch.matches?(nil, on: event.name, guard: false) }
                                    .flat_map do |callback|
           conditions = Introspection.guard_conditions(callback.branch)
-          callback.instance_variable_get(:@methods).map do |method|
+          callback.callables.map do |method|
             Labels.callback_text(label: Labels.action_label(method), conditions: conditions)
           end
         end

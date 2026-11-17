@@ -19,6 +19,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'rdoc'
   spec.add_dependency 'state_machines', '>= 0.300'
+  spec.add_dependency 'state_machines-diagram', '>= 0.3.0'
   spec.add_dependency 'yard'
   spec.add_development_dependency 'bundler', '>= 4.0'
   spec.add_development_dependency 'minitest', '~> 6.0'

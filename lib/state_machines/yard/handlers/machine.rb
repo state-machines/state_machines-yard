@@ -22,23 +22,18 @@ module StateMachines
         def process
           name # A machine whose name is code is not documented
 
-          # Cross-file storage for state machines
-          globals.state_machines ||= Hash.new { |h, k| h[k] = {} }
-          namespace['state_machines'] ||= {}
-
           # Given a block, even an empty one, the core copies an inherited
           # machine for the subclass instead of extending the superclass's
           @machine = owner_class.state_machine(name, options) do
             # The statement's block is parsed below
           end
 
-          # Track the state machine
-          globals.state_machines[namespace.path][name] = machine
-          namespace['state_machines'][name] = { name: name, description: statement.docstring }
+          track_machine
 
           # Parse the block
           parse_block(statement.block.last, owner: machine) if statement.block
 
+          document_events
           document_diagram
 
           # Define auto-generated methods
@@ -63,6 +58,22 @@ module StateMachines
         end
 
         # The machine's diagram, drawn by the selected renderer
+        # Stores the machine across files (subclasses find it there) and on
+        # the documented class
+        def track_machine
+          globals.state_machines ||= Hash.new { |h, k| h[k] = {} }
+          globals.state_machines[namespace.path][name] = machine
+          namespace['state_machines'] ||= {}
+          namespace['state_machines'][name] = { name: name, description: statement.docstring }
+        end
+
+        # The events' transitions, guards and callbacks as text, whatever
+        # renderer draws the diagram
+        def document_events
+          @events = Description.events(machine).to_h { [it[:name], it] }
+          namespace['state_machines'][name][:events] = @events.values
+        end
+
         def document_diagram
           render = Renderer.render(machine)
           return unless render
@@ -300,12 +311,15 @@ module StateMachines
         def define_event_fire_methods(event)
           args = '@param [Array] args Optional arguments to include in transition callbacks'
 
+          description = Description.docstring_lines(@events.fetch(event.name.to_s))
+
           document_method(event.qualified_name,
-                          ["Fires the #{event.name.inspect} event.", args,
+                          ["Fires the #{event.name.inspect} event.", *description, args,
                            '@return [Boolean] +true+ if the transition succeeds, otherwise +false+'],
                           parameters: ['*args'])
           document_method("#{event.qualified_name}!",
-                          ["Fires the #{event.name.inspect} event, raising an exception if it fails.", args,
+                          ["Fires the #{event.name.inspect} event, raising an exception if it fails.", *description,
+                           args,
                            '@return [Boolean] +true+ if the transition succeeds',
                            '@raise [StateMachines::InvalidTransition] If the transition fails'],
                           parameters: ['*args'])

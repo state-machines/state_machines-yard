@@ -11,6 +11,30 @@ This class contains <%= state_machines.count %> state machine(s).
     <h3><%= h(machine[:name]) %></h3>
     <p><%= h(machine[:description]) %></p>
 
+    <% if machine[:events]&.any? %>
+        <h4>Events</h4>
+        <dl class="state_machine_events">
+        <% machine[:events].each do |event| %>
+            <dt><tt><%= h(event[:name]) %></tt></dt>
+            <dd>
+            <% if event[:transitions].empty? %>
+                <p>No transitions: it never fires.</p>
+            <% else %>
+                <p>Transitions (from each state the first that matches is taken):</p>
+                <ul>
+                <% event[:transitions].each do |transition| %>
+                    <li><tt><%= h(transition) %></tt></li>
+                <% end %>
+                </ul>
+            <% end %>
+            <% if event[:failure].any? %>
+                <p>On failure: <tt><%= h(event[:failure].join(', ')) %></tt></p>
+            <% end %>
+            </dd>
+        <% end %>
+        </dl>
+    <% end %>
+
     <% if machine[:image] %>
         <img alt="State machine diagram for <%= h(machine[:name]) %>" src="<%= url_for(state_machine_image_path(machine)) %>"/>
     <% elsif machine[:mermaid] %>

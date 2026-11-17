@@ -16,9 +16,24 @@ Or install it yourself as:
 
     $ gem install state_machines-yard
 
+## Events
+
+Whatever the renderer, each class's documentation lists its machines' events, and
+each event's method (`ignite`, `ignite!`) describes the transitions it performs: from
+each state the first branch that matches, its guards and the callbacks that run on it,
+and the `after_failure` callbacks:
+
+    * parked -> idling [if engine_ok? && if_any_state (gate=open, alarm=off)] / before check_mirrors, after log_start (if logging?)
+    * parked -> stalled / before check_mirrors
+
+    On failure: alert
+
+The text is read through [state_machines-diagram](https://github.com/state-machines/state_machines-diagram),
+so it labels guards and callbacks exactly as the diagrams do.
+
 ## Diagrams
 
-Set `STATE_MACHINES_RENDERER` to draw each documented machine:
+Diagrams are an optional extra. Set `STATE_MACHINES_RENDERER` to draw each documented machine:
 
 * `graphviz` embeds a PNG drawn by [state_machines-graphviz](https://github.com/state-machines/state_machines-graphviz)
   (needs the `dot` binary)

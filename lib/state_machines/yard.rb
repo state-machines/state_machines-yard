@@ -9,6 +9,7 @@ module StateMachines
   end
 end
 
+require_relative 'yard/description'
 require_relative 'yard/handlers'
 require_relative 'yard/handlers/base'
 require_relative 'yard/handlers/requirements'

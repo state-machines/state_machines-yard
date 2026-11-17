@@ -64,6 +64,23 @@ class DescriptionTest < Minitest::Test
     end
   end
 
+  def test_callbacks_read_in_the_order_the_core_runs_them
+    machine = parse_machines(<<~RUBY)['Lamp'][:state]
+      class Lamp
+        state_machine initial: :off do
+          around_transition on: :switch, do: :hold
+          before_transition from: :off, do: :check
+          after_transition do: :log
+          around_transition on: :switch, do: :time
+          event(:switch) { transition off: :on }
+        end
+      end
+    RUBY
+
+    assert_equal(['off -> on / around hold, before check, around time, after log'],
+                 StateMachines::Yard::Description.events(machine).first[:transitions])
+  end
+
   def test_each_renderer_mode_documents_the_event_methods
     DIAGRAMS.each_key do |renderer|
       document(renderer)

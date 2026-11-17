@@ -30,11 +30,19 @@ module StateMachines
       # "parked -> idling [if a && if_state gate=open] / before check, after log"
       def transition(machine, event, from, to, branch)
         guards = Labels.condition_phrases(Introspection.guard_conditions(branch))
-        callbacks = Introspection.callback_labels(machine, from, to, event.name)
-                                 .flat_map { |type, labels| labels.map { "#{type} #{it}" } }
+        callbacks = callback_steps(machine, from, to, event.name)
         ["#{Labels.state_text(from)} -> #{Labels.state_text(to)}",
          ("[#{guards.join(' && ')}]" if guards.any?),
          ("/ #{callbacks.join(', ')}" if callbacks.any?)].compact.join(' ')
+      end
+
+      # The callbacks in the order the core runs them, each with its kind: an
+      # around where it enters (as Labels.action_list lists it), the afters
+      # after the state change: "around time, before check, after log"
+      def callback_steps(machine, from, to, event_name)
+        Introspection.callback_sequence(machine, from, to, event_name)
+                     .reject { it[:phase] == :exit }
+                     .map { "#{it[:kind]} #{Labels.callback_text(it)}" }
       end
 
       # The after_failure callbacks that run when the event fails

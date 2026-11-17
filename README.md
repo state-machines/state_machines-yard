@@ -20,7 +20,8 @@ Or install it yourself as:
 
 Whatever the renderer, each class's documentation lists its machines' events, and
 each event's method (`ignite`, `ignite!`) describes the transitions it performs: from
-each state the first branch that matches, its guards and the callbacks that run on it,
+each state the first branch that matches, its guards and the callbacks that run on it in
+the order the core runs them (an around where it enters),
 and the `after_failure` callbacks:
 
     * parked -> idling [if engine_ok? && if_any_state (gate=open, alarm=off)] / before check_mirrors, after log_start (if logging?)

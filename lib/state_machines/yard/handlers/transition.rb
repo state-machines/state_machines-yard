@@ -15,8 +15,12 @@ module StateMachines
 
         include Requirements
 
+        # What a transition is declared on: a machine, an event, or a state's
+        # block (state :parked do ... end), whose owner is its StateContext
+        OWNERS = [StateMachines::Machine, StateMachines::Event, StateMachines::StateContext].freeze
+
         def process
-          return unless [StateMachines::Machine, StateMachines::Event, StateMachines::State].include?(owner.class)
+          return unless OWNERS.include?(owner.class)
 
           owner.transition(requirements)
         rescue Unreadable, ArgumentError => e

@@ -139,4 +139,22 @@ class TransitionHandlerTest < Minitest::Test
 
     refute_nil maintain_method, 'maintain method should be registered'
   end
+
+  def test_a_transition_in_a_state_block_is_documented
+    code = <<~RUBY
+      class Vehicle
+        state_machine :status, initial: :parked do
+          state :idling do
+            transition to: :parked, on: :park, if: :stopped?
+          end
+        end
+      end
+    RUBY
+
+    branch = parse_machines(code)['Vehicle'][:status].events[:park].branches.first
+    requirement = branch.state_requirements.first
+
+    assert_equal([[:idling], [:parked], :stopped?],
+                 [requirement[:from].values, requirement[:to].values, branch.if_condition])
+  end
 end

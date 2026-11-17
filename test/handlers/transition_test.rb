@@ -157,4 +157,61 @@ class TransitionHandlerTest < Minitest::Test
     assert_equal([[:idling], [:parked], :stopped?],
                  [requirement[:from].values, requirement[:to].values, branch.if_condition])
   end
+
+  # A transition's own callbacks, by branch, as [type, methods]
+  def own_callbacks(body)
+    code = <<~RUBY
+      class Vehicle
+        state_machine :status, initial: :parked do
+          state :stalled, :broken
+      #{body.gsub(/^/, '    ')}
+        end
+      end
+    RUBY
+    machine = parse_machines(code)['Vehicle'][:status]
+    machine.events.flat_map(&:branches).map { |branch| branch.callbacks.map { [it.type, it.callables] } }
+  end
+
+  def test_a_transitions_own_callbacks_are_its_methods
+    found = own_callbacks(<<~RUBY)
+      event :ignite do
+        transition parked: :idling, before: :prime, around: [:crank, 'time_it'], after: %i[log_start warm_up]
+      end
+      state :idling do
+        transition to: :parked, on: :park, after: :set_brake
+      end
+    RUBY
+
+    assert_equal([[[:before, [:prime]], [:around, [:crank, 'time_it']], [:after, %i[log_start warm_up]]],
+                  [[:after, [:set_brake]]]], found)
+  end
+
+  def test_own_callbacks_written_as_code_are_methods_not_states
+    found = own_callbacks(<<~RUBY)
+      event :ignite do
+        transition parked: :idling, after: -> { tow }
+        transition parked: :stalled, before: [:prime, lambda { crank }], around: notifier
+        transition parked: :broken, after: method(:report)
+      end
+    RUBY
+
+    assert_equal([[[:after, ['lambda@(stdin):5']]],
+                  [[:before, [:prime, 'lambda@(stdin):6']], [:around, ['notifier']]],
+                  [[:after, ['method(:report)']]]], found)
+  end
+
+  def test_own_callbacks_the_core_refuses_leave_the_transition_out
+    found = own_callbacks(<<~RUBY)
+      event :ignite do
+        transition parked: :idling, after: nil
+        transition parked: :idling, before: [:prime, 1]
+        transition parked: :idling, around: []
+        transition parked: :idling, after: { log: true }
+        transition parked: :idling, do: :log
+        transition parked: :stalled, after: :kept
+      end
+    RUBY
+
+    assert_equal([[[:after, [:kept]]]], found)
+  end
 end

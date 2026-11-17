@@ -11,6 +11,7 @@ module StateMachines
       # reads a transition's.
       class Callback < Base
         include Requirements
+        include Actions
 
         # The DSL method of each callback kind
         KINDS = %i[before_transition after_transition around_transition after_failure].freeze
@@ -48,47 +49,6 @@ module StateMachines
           end
           methods << block_action(call_node.block) if call_node.block
           options.merge(do: methods)
-        end
-
-        def action_list(node)
-          node.is_a?(Prism::ArrayNode) ? node.elements.map { action(it) } : [action(node)]
-        end
-
-        # A method the callback runs, as the core reads it: a Symbol names a
-        # method, a String is code. A lambda or proc is shown as diagrams show
-        # a Proc, by where it is defined; any other code by its source.
-        def action(node)
-          case node
-          when Prism::SymbolNode, Prism::StringNode then literal(node)
-          else proc_literal?(node) ? lambda_label(node.location.start_line) : node.slice
-          end
-        end
-
-        # ->, lambda {}, proc {} or Proc.new {}
-        def proc_literal?(node)
-          return true if node.is_a?(Prism::LambdaNode)
-          return false unless node.is_a?(Prism::CallNode) && node.block
-
-          node.receiver.nil? ? %i[lambda proc].include?(node.name) : proc_new?(node)
-        end
-
-        def proc_new?(node)
-          node.name == :new && node.receiver.slice == 'Proc'
-        end
-
-        # The callback's own block, or a block argument: &:name as diagrams
-        # show a Symbol's proc, anything else as an action
-        def block_action(node)
-          return lambda_label(node.location.start_line) if node.is_a?(Prism::BlockNode)
-
-          expression = node.expression
-          expression.is_a?(Prism::SymbolNode) ? "&#{expression.slice}" : action(expression)
-        end
-
-        # "lambda@file:line", the label diagrams give a Proc; +line+ counts
-        # from the start of the statement
-        def lambda_label(line)
-          "lambda@#{File.basename(parser.file.to_s)}:#{statement.line + line - 1}"
         end
       end
     end

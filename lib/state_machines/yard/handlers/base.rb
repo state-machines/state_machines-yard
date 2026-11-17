@@ -33,10 +33,36 @@ module StateMachines
         # The handled call as Prism reads it
         def call_node
           @call_node ||= begin
-            node = Prism.parse(statement.source).value.statements.body.first
-            raise Unreadable, "`#{statement.source}` is not a plain call" unless node.is_a?(Prism::CallNode)
+            source = call_source
+            node = Prism.parse(source).value.statements.body.first
+            raise Unreadable, "`#{source}` is not a plain call" unless node.is_a?(Prism::CallNode)
 
             node
+          end
+        end
+
+        # The handled call's source, as Prism reads it in the file. YARD's
+        # parser ends a statement before a trailing rational or imaginary
+        # literal (`after: 1r` reads `after:`, which Prism reads as a call to
+        # `after`) and past a trailing negative number (`-1 }`), so the call is
+        # the one Prism finds where the statement starts.
+        def call_source
+          FileSource.call_at(statement.full_source, statement.source_range.begin)&.slice || statement.source
+        end
+
+        # The calls of the file being documented, read once per file
+        module FileSource
+          @calls = nil
+
+          # The innermost call starting at character +offset+ of +source+
+          def self.call_at(source, offset)
+            @calls = [source, calls_by_offset(source)] unless @calls&.first.equal?(source)
+            @calls.last[offset]
+          end
+
+          def self.calls_by_offset(source)
+            calls = Prism.parse(source).value.breadth_first_search_all { it.is_a?(Prism::CallNode) }
+            calls.group_by { it.location.start_character_offset }.transform_values { it.min_by { it.location.length } }
           end
         end
 

@@ -80,4 +80,22 @@ class BaseHandlerTest < Minitest::Test
       refute_nil method, "#{state}? method should be registered"
     end
   end
+
+  # YARD's parser ends a statement before a trailing rational or imaginary
+  # literal and past a trailing negative number; each call is read whole
+  def test_a_call_ending_in_any_number_is_read_whole
+    machine = parse_machines(<<~RUBY)['Vehicle'][:status]
+      class Vehicle # é
+        state_machine :status, initial: :parked do
+          state :parked, value: 1r
+          state :idling, value: 2i
+          state :stalled, value: -1
+          event(:ignite) { transition parked: :idling, if: 3r }
+        end
+      end
+    RUBY
+
+    assert_equal(%w[1r 2i -1], machine.states.map { it.value(false).inspect })
+    assert_equal(:'3r', machine.events[:ignite].branches.first.if_condition)
+  end
 end

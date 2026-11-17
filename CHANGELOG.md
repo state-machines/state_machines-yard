@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.0](https://github.com/state-machines/state_machines-yard/compare/v0.3.0...v0.4.0) (2026-11-17)
+
+
+### Features
+
+* list a transition's own callbacks where the core runs them ([f63e27b](https://github.com/state-machines/state_machines-yard/commit/f63e27b6fcae11bac31356971addb65453cc147a))
+* require state_machines-diagram 0.4.0 for transition callbacks ([0d72dc4](https://github.com/state-machines/state_machines-yard/commit/0d72dc40ea5a7d46a02bc428e4360ca1f66877f0))
+
+
+### Bug Fixes
+
+* document no callback method for do: nil or &nil ([b1d4e32](https://github.com/state-machines/state_machines-yard/commit/b1d4e3228145172268eaeb0083e53ec9909053f0))
+* document transitions declared in a state's block ([71951c6](https://github.com/state-machines/state_machines-yard/commit/71951c67654d6720818e05b00df55a78812fd582))
+* leave out a callback whose block argument has no to_proc ([e1b5d12](https://github.com/state-machines/state_machines-yard/commit/e1b5d12c05c78546ab8f0892db0cb700f71128f0))
+* read a call whole when YARD's parser cuts its last argument ([a8ee0ed](https://github.com/state-machines/state_machines-yard/commit/a8ee0edd69878e6406bdecb02da322b023f243ae))
+* read a callback method through parentheses and refuse every non-method ([0d5f024](https://github.com/state-machines/state_machines-yard/commit/0d5f024f11c0db7cd7db24264b9453d5448213a6))
+* read a transition's before:/around:/after: as the methods they are ([482a37f](https://github.com/state-machines/state_machines-yard/commit/482a37fe78677afbede4189c3736211fb2a1f7ab))
+
 ## [0.3.0](https://github.com/state-machines/state_machines-yard/compare/v0.2.0...v0.3.0) (2026-11-17)
 
 

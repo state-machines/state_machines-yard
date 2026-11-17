@@ -140,6 +140,32 @@ class TransitionHandlerTest < Minitest::Test
     refute_nil maintain_method, 'maintain method should be registered'
   end
 
+  # Every literal the core refuses as a transition's callback, bare, in an
+  # Array or inside parentheses or begin/end, leaves the transition out
+  def test_literals_that_are_no_method_leave_the_transition_out_however_written
+    values = ['(nil)', '(1)', '(false)', '(true)', '(1.5)', '({ log: true })', '/x/', "/x\#{y}/", '1r', '2i',
+              '-1', '1..2', '__LINE__', '__ENCODING__', '()', 'begin end', 'begin; nil; end', '((nil))',
+              '[[:a]]', '[(nil), :x]']
+    body = values.map.with_index { |value, index| "event(:e#{index}) { transition parked: :idling, after: #{value} }" }
+    body << 'event(:kept) { transition parked: :idling, after: :kept }'
+
+    assert_equal([[[:after, [:kept]]]], own_callbacks(body.join("\n")))
+  end
+
+  def test_a_group_of_one_expression_is_that_expression
+    found = own_callbacks(<<~RUBY)
+      event :ignite do
+        transition parked: :idling, after: ((:log))
+        transition parked: :stalled, before: (-> { tow })
+        transition parked: :broken, around: (%i[a b]), after: [(:c), begin :d end]
+        transition idling: :parked, after: (:a; :b)
+      end
+    RUBY
+
+    assert_equal([[[:after, [:log]]], [[:before, ['lambda@(stdin):6']]],
+                  [[:around, %i[a b]], [:after, %i[c d]]], [[:after, ['(:a; :b)']]]], found)
+  end
+
   def test_a_transition_in_a_state_block_is_documented
     code = <<~RUBY
       class Vehicle

@@ -94,6 +94,12 @@ class CallbackHandlerTest < Minitest::Test
                   'lambda@(stdin):3'], callback[:methods])
   end
 
+  def test_a_method_in_parentheses_is_that_method
+    callback = callbacks('before_transition on: :park, do: [(:lock), ((-> { beep })), begin :wait end]').first
+
+    assert_equal([:lock, 'lambda@(stdin):3', :wait], callback[:methods])
+  end
+
   def test_a_block_argument_is_a_method
     assert_equal([:lock, '&:beep'], callbacks('before_transition on: :park, do: :lock, &:beep').first[:methods])
   end

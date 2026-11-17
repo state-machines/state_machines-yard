@@ -24,8 +24,13 @@ module StateMachines
         OWNERS = [StateMachines::Machine, StateMachines::Event, StateMachines::StateContext].freeze
         # The options that hold the transition's own callbacks
         CALLBACKS = %i[before around after].freeze
-        # Literals the core never takes as a method
-        NOT_METHODS = [*KEYWORDS.keys, *NUMBERS, Prism::HashNode].freeze
+        # Literals whose value is never a method name (Symbol, String), Proc
+        # or Method, which is all the core takes as a transition's callback
+        NOT_METHODS = [
+          *KEYWORDS.keys, *NUMBERS, Prism::RationalNode, Prism::ImaginaryNode, Prism::RegularExpressionNode,
+          Prism::InterpolatedRegularExpressionNode, Prism::HashNode, Prism::RangeNode, Prism::SourceLineNode,
+          Prism::SourceEncodingNode
+        ].freeze
 
         def process
           return unless OWNERS.include?(owner.class)
@@ -49,13 +54,24 @@ module StateMachines
           end
         end
 
-        # The methods of a before:/around:/after: option. A literal that is
-        # no method (nil, true, a number, a Hash) stays itself, so the core
-        # refuses it as it would when the class loads.
+        # The methods of a before:/around:/after: option: one, or an Array of
+        # them, each read through any parentheses around it. A literal that
+        # is no method (nil, true, a number, a Regexp, a Hash, a Range, an
+        # Array inside the list) is kept as code the core refuses, as it
+        # refuses that literal when the class loads.
         def own_callbacks(node)
-          return literal(node) if NOT_METHODS.any? { node.is_a?(it) }
+          node = unwrap(node)
+          return node.elements.map { own_callback(it) } if node.is_a?(Prism::ArrayNode)
 
-          node.is_a?(Prism::ArrayNode) ? node.elements.map { own_callbacks(it) } : action(node)
+          own_callback(node)
+        end
+
+        def own_callback(node)
+          node = unwrap(node)
+          return Code.new(node.slice) if node.is_a?(Prism::ArrayNode) || nil_literal?(node) ||
+                                         NOT_METHODS.any? { node.is_a?(it) }
+
+          action(node)
         end
       end
     end

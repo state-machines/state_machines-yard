@@ -18,10 +18,38 @@ module StateMachines
         # method, a String is code. A lambda or proc is shown as diagrams show
         # a Proc, by where it is defined; any other code by its source.
         def action(node)
+          node = unwrap(node)
           case node
           when Prism::SymbolNode, Prism::StringNode then literal(node)
           else proc_literal?(node) ? lambda_label(node.location.start_line) : node.slice
           end
+        end
+
+        # The expression a group gives: (x), ((x)) and begin x end are x. An
+        # empty group, or one of several expressions or with rescue / else /
+        # ensure, stays itself (see #nil_literal?).
+        def unwrap(node)
+          single = single_statement(group_body(node)) if group?(node)
+          single ? unwrap(single) : node
+        end
+
+        # nil, written as such or as an empty group: () or begin end
+        def nil_literal?(node)
+          node = unwrap(node)
+          node.is_a?(Prism::NilNode) || (group?(node) && group_body(node).nil?)
+        end
+
+        def group?(node)
+          node.is_a?(Prism::ParenthesesNode) ||
+            (node.is_a?(Prism::BeginNode) && !node.rescue_clause && !node.else_clause && !node.ensure_clause)
+        end
+
+        def group_body(node) = node.is_a?(Prism::BeginNode) ? node.statements : node.body
+
+        def single_statement(body)
+          return body unless body.is_a?(Prism::StatementsNode)
+
+          body.body.first if body.body.one?
         end
 
         # ->, lambda {}, proc {} or Proc.new {}

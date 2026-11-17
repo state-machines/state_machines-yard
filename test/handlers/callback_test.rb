@@ -118,6 +118,17 @@ class CallbackHandlerTest < Minitest::Test
     assert_equal([[:check], [:lock]], found.map { it[:methods] })
   end
 
+  # & calls to_proc: a literal without one raises TypeError, so the core
+  # never registers the declaration; a Symbol's and a Hash's are Procs
+  def test_a_block_argument_without_to_proc_leaves_the_declaration_out
+    values = ['false', 'true', '1', '1.5', '1r', '2i', '"bad"', "\"a\#{b}\"", '`ls`', '__FILE__', '__LINE__',
+              '__ENCODING__', '[]', '%i[a]', '1..2', '/x/', '(false)', 'begin 1 end', '((true))']
+    body = values.map { "before_transition on: :park, do: :check, &#{it}" }
+    body.push('before_transition on: :park, do: :kept, &:beep', 'before_transition on: :park, do: :kept, &({ a: 1 })')
+
+    assert_equal([[:kept, '&:beep'], [:kept, 'lambda']], callbacks(body.join("\n")).map { it[:methods] })
+  end
+
   def test_options_on_how_a_callback_runs_are_not_requirements
     callback = callbacks('before_transition on: :park, do: :lock, bind_to_object: true, terminator: nil').first
 

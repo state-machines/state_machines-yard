@@ -22,9 +22,11 @@ module StateMachines
         def process
           name # A machine whose name is code is not documented
 
-          # Given a block, even an empty one, the core copies an inherited
-          # machine for the subclass instead of extending the superclass's
-          @machine = owner_class.state_machine(name, options) do
+          # A machine the class already documents is reopened, as the core
+          # does. Given a block, even an empty one, the core copies an
+          # inherited machine for the subclass instead of extending the
+          # superclass's, and applies the subclass's options to the copy.
+          @machine = (reopened_machine&.owner_class || owner_class).state_machine(name, options) do
             # The statement's block is parsed below
           end
 
@@ -40,7 +42,9 @@ module StateMachines
           define_macro_methods
           define_state_methods
           define_event_methods
-        rescue Unreadable => e
+        rescue Unreadable, ArgumentError => e
+          # A machine the core refuses (an option a reopened machine cannot
+          # change) is not documented as something else
           skip('state machine', e)
         end
 
@@ -57,14 +61,19 @@ module StateMachines
           klass
         end
 
-        # The machine's diagram, drawn by the selected renderer
+        # The machine this class already documents under the name, if any
+        def reopened_machine
+          globals.state_machines&.dig(namespace.path, name)
+        end
+
         # Stores the machine across files (subclasses find it there) and on
         # the documented class
         def track_machine
           globals.state_machines ||= Hash.new { |h, k| h[k] = {} }
           globals.state_machines[namespace.path][name] = machine
           namespace['state_machines'] ||= {}
-          namespace['state_machines'][name] = { name: name, description: statement.docstring }
+          entry = namespace['state_machines'][name] ||= { name: name }
+          entry[:description] = statement.docstring unless statement.docstring.to_s.empty? && entry[:description]
         end
 
         # The events' transitions, guards and callbacks as text, whatever
@@ -74,6 +83,7 @@ module StateMachines
           namespace['state_machines'][name][:events] = @events.values
         end
 
+        # The machine's diagram, drawn by the selected renderer
         def document_diagram
           render = Renderer.render(machine)
           return unless render
@@ -94,13 +104,11 @@ module StateMachines
         # written as code is decided when the object is created, so no state
         # is documented as the initial one.
         def options
-          @options ||= if inherited_machine
-                         {}
-                       else
-                         options = literal_options(%i[initial attribute namespace action])
-                         options[:initial] = DYNAMIC_INITIAL_STATE if dynamic_initial_state?
-                         options
-                       end
+          @options ||= begin
+            options = literal_options(%i[initial attribute namespace action])
+            options[:initial] = DYNAMIC_INITIAL_STATE if dynamic_initial_state?
+            options
+          end
         end
 
         def dynamic_initial_state?
@@ -172,8 +180,10 @@ module StateMachines
         def document_method(name, docstring, parameters: nil, scope: :instance)
           method = YARD::CodeObjects::MethodObject.new(namespace, name, scope)
           register(method)
+          # YARD checks @param tags against the parameters, as [name, default]
+          # pairs, when the docstring is set
+          method.parameters = parameters.map { |name, default| [name, default] } if parameters
           method.docstring = docstring
-          method.parameters = parameters if parameters
           method
         end
 

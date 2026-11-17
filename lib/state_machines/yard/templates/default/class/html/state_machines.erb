@@ -17,7 +17,9 @@ This class contains <%= state_machines.count %> state machine(s).
         <% machine[:events].each do |event| %>
             <dt><tt><%= h(event[:name]) %></tt></dt>
             <dd>
-            <% if event[:transitions].empty? %>
+            <% if event[:error] %>
+                <p>Its transitions cannot be described: <%= h(event[:error]) %></p>
+            <% elsif event[:transitions].empty? %>
                 <p>No transitions: it never fires.</p>
             <% else %>
                 <p>Transitions (from each state the first that matches is taken):</p>

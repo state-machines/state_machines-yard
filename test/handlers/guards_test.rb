@@ -67,14 +67,14 @@ class GuardsTest < Minitest::Test
       transition parked: :idling, unless: [:cold?, engine.stalled?]
     RUBY
 
-    assert_equal('-> { warm? }', first.if_condition)
-    assert_equal([:cold?, 'engine.stalled?'], second.unless_condition)
+    assert_equal(:'-> { warm? }', first.if_condition)
+    assert_equal(%i[cold? engine.stalled?], second.unless_condition)
   end
 
   def test_a_dynamic_condition_is_never_read_as_a_state_matcher
     branch = branches('transition parked: :moving, if: all').first
 
-    assert_equal('all', branch.if_condition)
+    assert_equal(:all, branch.if_condition)
   end
 
   def test_false_and_nil_are_no_condition

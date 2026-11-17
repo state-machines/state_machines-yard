@@ -57,7 +57,8 @@ module StateMachines
         # An if:/unless: condition as the core reads it: nil and false are no
         # condition, an Array is several, a Symbol names a method, a String is
         # code. Anything else is code (a lambda, a method call) only known
-        # when it runs, so its source is documented as the condition.
+        # when it runs, so its source is documented as the condition
+        # (#condition_term).
         def condition(node)
           case node
           when Prism::NilNode then nil
@@ -67,10 +68,14 @@ module StateMachines
           end
         end
 
+        # A Symbol or String condition as written. Code (a lambda, a method
+        # call) is kept as a Symbol of its source: diagrams show it as
+        # written, and it is never taken for a String condition, which the
+        # core (and diagram introspection) validates and evaluates as code.
         def condition_term(node)
           case node
           when Prism::SymbolNode, Prism::StringNode then literal(node)
-          else node.slice
+          else node.slice.to_sym
           end
         end
 

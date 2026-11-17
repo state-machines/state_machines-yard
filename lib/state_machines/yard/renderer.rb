@@ -24,7 +24,7 @@ module StateMachines
         when :graphviz then render_graphviz(machine)
         when :mermaid then render_mermaid(machine)
         end
-      rescue StandardError => e
+      rescue StandardError, SecurityError => e
         log.warn "state_machines-yard: no #{selection} diagram for #{machine.owner_class} #{machine.name}: " \
                  "#{e.class}: #{e.message}"
         nil

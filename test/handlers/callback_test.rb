@@ -79,7 +79,7 @@ class CallbackHandlerTest < Minitest::Test
     RUBY
 
     assert_equal([:logging?, 'verbose'], callback[:if])
-    assert_equal('-> { quiet? }', callback[:unless])
+    assert_equal(:'-> { quiet? }', callback[:unless])
     assert_equal({ if_any_state: { alarm: :off, gate: nil } }, callback[:state_guards])
   end
 

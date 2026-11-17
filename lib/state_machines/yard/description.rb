@@ -14,12 +14,16 @@ module StateMachines
 
       module_function
 
-      # Each event as { name:, transitions: [line], failure: [callback] }
+      # Each event as { name:, transitions: [line], failure: [callback] }, or
+      # { name:, error: } when the core refuses one of its conditions (a
+      # String it will not evaluate): it raises the same when it fires
       def events(machine)
         machine.events.map do |event|
           { name: event.name.to_s,
             transitions: Introspection.event_transitions(machine, event).map { transition(machine, event, *it) },
             failure: failure_callbacks(machine, event) }
+        rescue SecurityError, ArgumentError => e
+          { name: event.name.to_s, error: e.message, transitions: [], failure: [] }
         end
       end
 
@@ -46,7 +50,9 @@ module StateMachines
 
       # The event's description lines for its methods' docstrings
       def docstring_lines(event)
-        lines = if event[:transitions].empty?
+        lines = if event[:error]
+                  ['', "Its transitions cannot be described: #{event[:error]}"]
+                elsif event[:transitions].empty?
                   ['', 'No transitions: it never fires.']
                 else
                   ['', 'Transitions (from each state the first that matches is taken):', '',

@@ -13,9 +13,18 @@ module StateMachines
         # the code runs
         class Unreadable < StandardError; end
 
+        # Code the documented source holds where the core takes a value (a
+        # state's value: or human_name:), shown as it is written
+        Code = Data.define(:source) do
+          def to_s = source
+          def inspect = source
+        end
+
         # The literals Ruby spells as keywords
         KEYWORDS = { Prism::NilNode => nil, Prism::TrueNode => true, Prism::FalseNode => false }.freeze
         NUMBERS = [Prism::IntegerNode, Prism::FloatNode].freeze
+        # The literals a name can be
+        NAMES = [Symbol, String, Integer, Float, TrueClass, FalseClass].freeze
         # Text literals, and how each turns its text into its value
         TEXTS = { Prism::SymbolNode => :to_sym, Prism::StringNode => :itself }.freeze
 
@@ -68,11 +77,12 @@ module StateMachines
           end
         end
 
-        # A state, event or machine name: a Symbol or String literal (or
-        # nil, the nil state, when +nil_allowed+)
+        # A state, event or machine name: any literal the core takes as one,
+        # a Symbol, String, number, true or false (or nil, the nil state,
+        # when +nil_allowed+)
         def name_literal(node, nil_allowed: false)
           value = literal(node)
-          return value if value.is_a?(Symbol) || value.is_a?(String) || (nil_allowed && value.nil?)
+          return value if NAMES.any? { value.is_a?(it) } || (nil_allowed && value.nil?)
 
           unreadable(node)
         end
@@ -84,17 +94,30 @@ module StateMachines
           node.elements.map { name_literal(it, nil_allowed: nil_allowed) }
         end
 
-        # The literal options among +keys+; any other option is left out, as
-        # is one written as code
-        def literal_options(keys)
+        # The literal options among +keys+; any other option is left out. An
+        # option written as code is a Code of its source when it is one of
+        # +code+, and otherwise left out; either way with a warning, since
+        # the documentation cannot show its value.
+        def literal_options(keys, code: [])
           option_pairs.each_with_object({}) do |(key, value), options|
             name = literal(key)
             next unless keys.include?(name)
 
-            options[name] = literal(value)
+            options[name] = option_literal(name, value, code)
           rescue Unreadable
             next
           end
+        end
+
+        def option_literal(name, node, code)
+          literal(node)
+        rescue Unreadable
+          documented = code.include?(name) ? 'documented as its source' : 'left out'
+          log.warn "state_machines-yard: #{name}: is code (`#{node.slice}`), #{documented} " \
+                   "(#{parser.file}:#{statement.line})"
+          raise unless code.include?(name)
+
+          Code.new(node.slice)
         end
 
         def unreadable(node)

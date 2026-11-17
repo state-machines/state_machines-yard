@@ -144,8 +144,9 @@ class GuardsTest < Minitest::Test
       end
     RUBY
 
-    assert_equal([[:parked, 1, 'Parked'], [:idling, 'idling', 'idling']],
-                 machine.states.map { [it.name, it.value(false), it.human_name] })
+    # A value written as code is shown as written, never as the default
+    assert_equal([[:parked, '1', 'Parked'], [:idling, 'Time.now', 'idling']],
+                 machine.states.map { [it.name, it.value(false).inspect, it.human_name] })
     assert_equal([[:'odd name', 'Odd']], machine.events.map { [it.name, it.human_name] })
   end
 

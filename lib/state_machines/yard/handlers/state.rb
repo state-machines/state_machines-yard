@@ -16,14 +16,16 @@ module StateMachines
           handler = self
           block = statement.block
           names = positional_arguments.flat_map { names_in(it, nil_allowed: true) }
-          options = literal_options(%i[value human_name])
+          options = literal_options(%i[value human_name], code: %i[value human_name])
 
           names.each do |name|
             owner.state(name, **options) do
               handler.parse_block(block.last, owner: self) if block
             end
           end
-        rescue Unreadable => e
+        rescue Unreadable, ArgumentError => e
+          # One the core refuses (a name of another type than the others) is
+          # not documented as something else
           skip('state', e)
         end
       end

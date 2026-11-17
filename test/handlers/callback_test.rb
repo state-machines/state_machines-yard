@@ -104,6 +104,20 @@ class CallbackHandlerTest < Minitest::Test
     assert_equal([:lock, '&:beep'], callbacks('before_transition on: :park, do: :lock, &:beep').first[:methods])
   end
 
+  # The core reads do: with Array(), so do: nil adds no method, and &nil
+  # passes no block; a callback left with no method is refused
+  def test_nil_adds_no_method
+    found = callbacks(<<~RUBY)
+      before_transition on: :park, do: :check, &nil
+      before_transition :lock, on: :park, do: (nil), &(nil)
+      after_transition on: :park, &nil
+      after_transition on: :park, do: nil
+      after_transition on: :park, do: ()
+    RUBY
+
+    assert_equal([[:check], [:lock]], found.map { it[:methods] })
+  end
+
   def test_options_on_how_a_callback_runs_are_not_requirements
     callback = callbacks('before_transition on: :park, do: :lock, bind_to_object: true, terminator: nil').first
 

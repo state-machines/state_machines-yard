@@ -9,8 +9,12 @@ module StateMachines
       module Actions
         private
 
-        # A method or an Array of them
+        # A do: option's methods: one, or an Array of them. The core reads
+        # it with Array(), so nil (do: nil) is no method.
         def action_list(node)
+          return [] if nil_literal?(node)
+
+          node = unwrap(node)
           node.is_a?(Prism::ArrayNode) ? node.elements.map { action(it) } : [action(node)]
         end
 
@@ -65,12 +69,15 @@ module StateMachines
         end
 
         # The callback's own block, or a block argument: &:name as diagrams
-        # show a Symbol's proc, anything else as an action
-        def block_action(node)
-          return lambda_label(node.location.start_line) if node.is_a?(Prism::BlockNode)
+        # show a Symbol's proc, anything else as an action. &nil passes no
+        # block, so it is no method.
+        def block_actions(node)
+          return [lambda_label(node.location.start_line)] if node.is_a?(Prism::BlockNode)
 
-          expression = node.expression
-          expression.is_a?(Prism::SymbolNode) ? "&#{expression.slice}" : action(expression)
+          expression = unwrap(node.expression)
+          return [] if nil_literal?(expression)
+
+          [expression.is_a?(Prism::SymbolNode) ? "&#{expression.slice}" : action(expression)]
         end
 
         # "lambda@file:line", the label diagrams give a Proc; +line+ counts

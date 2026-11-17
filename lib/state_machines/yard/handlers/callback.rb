@@ -47,7 +47,7 @@ module StateMachines
               read[name] = option_value(name, value)
             end
           end
-          methods << block_action(call_node.block) if call_node.block
+          methods.concat(block_actions(call_node.block)) if call_node.block
           options.merge(do: methods)
         end
       end
